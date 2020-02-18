@@ -25,7 +25,6 @@ def generate(prompt):
     models_dir = 'models'
     ######################
     
-    #models_dir = os.path.expanduser(os.path.expandvars(models_dir))
     models_dir = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'models'))
     assert nsamples % batch_size == 0
 
@@ -60,11 +59,18 @@ def generate(prompt):
 
 # Discord Command(s)
 bot = commands.Bot(command_prefix='`')
+bot.remove_command("help")
 
 @bot.command()
 async def speak(ctx, arg):
-    await ctx.send(generate(arg))
+    async with ctx.channel.typing():
+        await ctx.send(generate(arg))
+
+@bot.command()
+async def help(ctx):
+    embed = discord.Embed(title="Commands", description="All commands use the ` prefix")
+    embed.add_field(name="`help", value="Shows this message!", inline=False)
+    embed.add_field(name="`speak \"[prompt]\"", value="Generates GPT-2 output from the given prompt.", inline=False)
+    await ctx.send(embed=embed)
 
 bot.run('YOUR_TOKEN_HERE')
-
-

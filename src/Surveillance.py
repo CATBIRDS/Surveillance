@@ -1,5 +1,4 @@
 # GPT-2
-import fire
 import json
 import os
 import numpy as np

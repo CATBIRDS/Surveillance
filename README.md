@@ -8,6 +8,7 @@ Currently it generates output using GPT-2, but this may change if better generat
 
 ### Installation
 This project uses Python 3.7.0
+
 First install the requirements, this is done using [pip](https://bootstrap.pypa.io/get-pip.py "pip").
 ```shell
 pip install -r requirements.txt
@@ -17,6 +18,7 @@ Then download your model of choice. By default, Surveillance is modelled for the
 python download_model.py 355M
 ```
 Surveillance is now installed. Make sure to change the placeholder token to your bot's token in Surveillance.py
+
 You can find out how to set up the foundation for a bot and get its token [here](https://discordapp.com/developers "here").
 
 ### Usage

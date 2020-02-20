@@ -4,6 +4,7 @@ import os
 import numpy as np
 import tensorflow as tf
 import re
+import configparser
 
 import model, sample, encoder
 
@@ -11,20 +12,36 @@ import model, sample, encoder
 import discord
 from discord.ext import commands
 
+config = configparser.ConfigParser()
+config.read('settings.ini')
+
 # GPT-2 Generation
 def generate(prompt):
+    config.read('settings.ini') # Check each run to allow for editing parameters while live
 
-    ##### PARAMETERS #####
-    model_name = '355M'
-    seed = None
+    ##### USER-MODIFIABLE PARAMETERS #####
+    model_name = str(config['gpt-2']['model_name'])
+    if(str(config['gpt-2']['seed']) == 'None'):
+       seed = None
+    else: seed = int(config['gpt-2']['seed'])
+    if(str(config['gpt-2']['length']) == 'None'):
+       length = None
+    else: length = int(config['gpt-2']['length'])
+    temperature = float(config['gpt-2']['temperature'])
+    top_k = int(config['gpt-2']['top_k'])
+    ######################################
+
+    ##### FIXED PARAMETERS #####
+    # model_name = '355M'
+    # seed = None
+    # length = None
+    # temperature = 0.7
+    # top_k = 40
     nsamples = 1
     batch_size = 1
-    length = None
-    temperature = 0.7
-    top_k = 40
     top_p = 1
     models_dir = 'models'
-    ######################
+    ############################
     
     models_dir = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'models'))
     assert nsamples % batch_size == 0
@@ -64,30 +81,41 @@ def generate(prompt):
         return text
 
 # Discord Command(s)
-bot = commands.Bot(command_prefix='`')
+bot = commands.Bot(command_prefix = str(config['discord']['prefix']))
 bot.remove_command("help")
 
 @bot.command()
 async def speak(ctx, arg1, arg2=''):
     async with ctx.channel.typing():
+
+        config.read('settings.ini') # Check each run to allow for editing parameters while live
+
+        length = int(config['discord']['length'])
+        schizolength = int(config['discord']['schizolength'])
+
         if (arg1 == "schizo" and arg2 != ''):
             message = str(generate(arg2))
             message = re.sub('(<\|endoftext\|>)', '', message) # Regex to remove this commonly occurring garbage
-            message = message[:500]
+            message = message[:schizolength]
         else:
             message = generate(arg1)
+            message = re.sub('^[^a-zA-Z]*', ' ', message) # Remove non-letter junk from beginning of generation. Can cause lopsided quotations in edge-cases
             message = re.sub('(<\|endoftext\|>)', ' ', message) # Regex to remove this commonly occurring garbage
-            message = message[:1000]
+            message = message[:length]
             message = re.sub('(?<=\.)[^.]*\Z', '', message) # Regex to remove anything after the last period, if applicable
 
         await ctx.send(message)
 
 @bot.command()
 async def help(ctx):
+
+    config.read('settings.ini') # Check each run to allow for editing parameters while live
+    prefix = str(config['discord']['prefix'])
+
     embed = discord.Embed(title="Commands", description="All commands use the ` prefix")
-    embed.add_field(name="`help", value="Shows this message!", inline=False)
-    embed.add_field(name="`speak \"[prompt]\"", value="Generates GPT-2 output from the given prompt.", inline=False)
-    embed.add_field(name="`speak schizo \"[prompt]\"", value="Generates fragmented and sometimes incoherent GPT-2 output from the given prompt.", inline=False)
+    embed.add_field(name=prefix+"help", value="Shows this message!", inline=False)
+    embed.add_field(name=prefix+"speak \"[prompt]\"", value="Generates GPT-2 output from the given prompt.", inline=False)
+    embed.add_field(name=prefix+"speak schizo \"[prompt]\"", value="Generates fragmented and sometimes incoherent GPT-2 output from the given prompt.", inline=False)
     await ctx.send(embed=embed)
 
 bot.run('YOUR_TOKEN_HERE')

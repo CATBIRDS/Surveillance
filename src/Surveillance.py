@@ -95,12 +95,13 @@ async def speak(ctx, arg1, arg2=''):
 
         if (arg1 == "schizo" and arg2 != ''):
             message = str(generate(arg2))
-            message = re.sub('(<\|endoftext\|>)', '', message) # Regex to remove this commonly occurring garbage
+            message = re.sub('(<\|endoftext\|>)', ' ', message) # Regex to remove this commonly occurring garbage
+            message = re.sub('^[^a-zA-Z]*', ' ', message) # Remove non-letter junk from beginning of generation. Can cause lopsided quotations in edge-cases
             message = message[:schizolength]
         else:
             message = generate(arg1)
-            message = re.sub('^[^a-zA-Z]*', ' ', message) # Remove non-letter junk from beginning of generation. Can cause lopsided quotations in edge-cases
             message = re.sub('(<\|endoftext\|>)', ' ', message) # Regex to remove this commonly occurring garbage
+            message = re.sub('^[^a-zA-Z]*', ' ', message) # Remove non-letter junk from beginning of generation. Can cause lopsided quotations in edge-cases
             message = message[:length]
             message = re.sub('(?<=\.)[^.]*\Z', '', message) # Regex to remove anything after the last period, if applicable
 
